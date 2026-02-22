@@ -748,6 +748,20 @@ def remove_batch_dim(tensor: Float[torch.Tensor, "1 ..."]) -> Float[torch.Tensor
         return tensor
 
 
+def ensure_tokens_batch_dim(tokens: torch.Tensor) -> torch.Tensor:
+    """Ensure token tensor has a batch dimension (shape batch x pos [x d_model]).
+
+    Args:
+        tokens: Token ids or embeddings, either 1D (pos,) or 2D+
+
+    Returns:
+        Tensor with a batch dimension. If input was 1D, output has shape (1, ...).
+    """
+    if tokens.dim() == 1:
+        return tokens.unsqueeze(0)
+    return tokens
+
+
 def test_prompt(
     prompt: str,
     answer: Union[str, list[str]],

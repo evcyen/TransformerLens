@@ -167,6 +167,26 @@ def test_override_or_use_default_value():
     assert utils.override_or_use_default_value(default_flag=False) == False
 
 
+class Test_ensure_tokens_batch_dim:
+    def test_1d_int_tokens_adds_batch_dim(self):
+        tokens_1d = torch.tensor([1, 2, 3, 4, 5])
+        out = utils.ensure_tokens_batch_dim(tokens_1d)
+        assert out.shape == (1, 5)
+        assert (out[0] == tokens_1d).all()
+
+    def test_2d_tokens_unchanged(self):
+        tokens_2d = torch.tensor([[1, 2, 3], [4, 5, 6]])
+        out = utils.ensure_tokens_batch_dim(tokens_2d)
+        assert out.shape == (2, 3)
+        assert (out == tokens_2d).all()
+
+    def test_3d_unchanged(self):
+        x = torch.randn(2, 3, 4)
+        out = utils.ensure_tokens_batch_dim(x)
+        assert out.shape == (2, 3, 4)
+        assert (out == x).all()
+
+
 def test_is_library_available():
     # Checking libraries that are definitely included in dependencies
     assert utils.is_library_available("torch") is True

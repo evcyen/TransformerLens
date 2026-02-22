@@ -338,7 +338,7 @@ class HookedTransformer(HookedRootModule):
 
     def input_to_embed(
         self,
-        input: Union[str, List[str], Int[torch.Tensor, "batch pos"]],
+        input: Union[str, List[str], Int[torch.Tensor, "pos"], Int[torch.Tensor, "batch pos"]],
         prepend_bos: Optional[Union[bool, None]] = USE_DEFAULT_VALUE,
         padding_side: Optional[Union[Literal["left", "right"], None]] = USE_DEFAULT_VALUE,
         attention_mask: Optional[torch.Tensor] = None,
@@ -372,9 +372,8 @@ class HookedTransformer(HookedRootModule):
             tokens = self.to_tokens(input, prepend_bos=prepend_bos, padding_side=padding_side)
         else:
             tokens = input
-        if len(tokens.shape) == 1:
-            # If tokens are a rank 1 tensor, add a dummy batch dimension to avoid things breaking.
-            tokens = tokens[None]
+        # Ensure tokens have batch dimension; 1D input causes shape errors in attention.
+        tokens = utils.ensure_tokens_batch_dim(tokens)
         if tokens.device.type != self.cfg.device:
             tokens = tokens.to(devices.get_device_for_block_index(0, self.cfg))
 
@@ -498,7 +497,9 @@ class HookedTransformer(HookedRootModule):
         input: Union[
             str,
             List[str],
+            Int[torch.Tensor, "pos"],
             Int[torch.Tensor, "batch pos"],
+            Float[torch.Tensor, "pos d_model"],
             Float[torch.Tensor, "batch pos d_model"],
         ],
         return_type: Optional[str] = "logits",

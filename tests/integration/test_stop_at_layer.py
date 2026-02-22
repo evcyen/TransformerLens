@@ -232,3 +232,22 @@ def test_no_stop_no_output():
     assert "blocks.2.hook_resid_pre" in cache.keys()
     assert "blocks.2.hook_resid_post" in cache.keys()
     assert "ln_final.hook_normalized" in cache.keys()
+
+
+def test_run_with_cache_accepts_1d_tokens():
+    cfg = HookedTransformerConfig(
+        n_layers=2,
+        d_mlp=8,
+        d_model=10,
+        d_head=5,
+        n_heads=2,
+        n_ctx=20,
+        d_vocab=50,
+        act_fn="relu",
+    )
+    model = HookedTransformer(cfg=cfg)
+    tokens_1d = torch.randint(0, 50, (10,))
+    logits, cache = model.run_with_cache(tokens_1d)
+    assert logits.shape == (1, 10, 50)
+    assert "hook_embed" in cache.keys()
+    assert cache["hook_embed"].shape[0] == 1
